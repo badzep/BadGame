@@ -1,0 +1,2 @@
+echo "Running"
+./target/test
