@@ -11,8 +11,7 @@ void initialize_simulation(Simulation* simulation) {
 
 void nearCallback (void *data, dGeomID geometry1, dGeomID geometry2) {
     Simulation* simulation = (Simulation*) data;
-    if (dGeomIsSpace(geometry1) || dGeomIsSpace(geometry2))
-    {
+    if (dGeomIsSpace(geometry1) || dGeomIsSpace(geometry2)) {
         dSpaceCollide2(geometry1, geometry2, data, &nearCallback);
         return;
     }

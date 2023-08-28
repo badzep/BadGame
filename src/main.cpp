@@ -1,4 +1,6 @@
 #define RLIGHTS_IMPLEMENTATION
+
+
 #include "rlights.h"
 #include "Constants.h"
 #include "Sprite.h"
