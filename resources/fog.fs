@@ -32,7 +32,7 @@ struct Light {
     vec4 color;
 };
 
-// Input lighting values
+// Input lighting_shader values
 uniform Light lights[MAX_LIGHTS];
 uniform vec4 ambient;
 uniform vec3 viewPos;
@@ -53,16 +53,16 @@ void main()
     {
         if (lights[i].enabled == 1)
         {
-            vec3 light = vec3(0.0);
+            vec3 player_light = vec3(0.0);
 
-            if (lights[i].type == LIGHT_DIRECTIONAL) light = -normalize(lights[i].target - lights[i].position);
-            if (lights[i].type == LIGHT_POINT) light = normalize(lights[i].position - fragPosition);
+            if (lights[i].type == LIGHT_DIRECTIONAL) player_light = -normalize(lights[i].target - lights[i].position);
+            if (lights[i].type == LIGHT_POINT) player_light = normalize(lights[i].position - fragPosition);
 
-            float NdotL = max(dot(normal, light), 0.0);
+            float NdotL = max(dot(normal, player_light), 0.0);
             lightDot += lights[i].color.rgb*NdotL;
 
             float specCo = 0.0;
-            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // Shine: 16.0
+            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(player_light), normal))), 16.0); // Shine: 16.0
             specular += specCo;
         }
     }

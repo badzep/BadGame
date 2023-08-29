@@ -4,6 +4,7 @@
 
 #include <ode/ode.h>
 #include <raylib.h>
+#include "Config.h"
 
 
 #define MIN(a, b) ((a)<(b)? (a) : (b))

@@ -19,8 +19,7 @@ void nearCallback (void *data, dGeomID geometry1, dGeomID geometry2) {
     dContact contact[N];
     int n = dCollide(geometry1, geometry2, N, &(contact[0].geom), sizeof(dContact));
     if (n > 0) {
-        for (int i = 0; i < n; i++)
-        {
+        for (int i = 0; i < n; i++) {
             contact[i].surface.mode = dContactSoftERP | dContactSoftCFM | dContactApprox1 | dContactSlip1 | dContactSlip2;
             contact[i].surface.slip1 = 0.01;
             contact[i].surface.slip2 = 0.01;

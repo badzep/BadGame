@@ -7,6 +7,7 @@
 
 void update_model_rotation(Sprite3d* sprite)  {
     const double* rotation = dBodyGetRotation(sprite->hitbox.body);
+
     Vector3 euler = QuaternionToEuler(QuaternionFromMatrix((Matrix) {(float) rotation[0], (float) rotation[1], (float) rotation[2], (float) rotation[3],
                                                                      (float) rotation[4], (float) rotation[5], (float) rotation[6], (float) rotation[7],
                                                                      (float) rotation[8], (float) rotation[9], (float) rotation[10], (float) rotation[11],
