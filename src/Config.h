@@ -7,7 +7,6 @@ typedef struct {
     int target_fps;
     float fov;
     float sensitivity;
-    float fog_density;
 } Config;
 
 

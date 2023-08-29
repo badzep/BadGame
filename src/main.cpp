@@ -26,6 +26,9 @@ int main() {
     RenderTexture2D target = LoadRenderTexture(RENDER_WIDTH, RENDER_HEIGHT);
     SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
 
+    MainScreen main_screen;
+    main_screen.run(&target, &config);
+
     Debug0 debug;
     debug.run(&target, &config);
 

@@ -45,22 +45,25 @@ protected:
     virtual std::string id() = 0;
     virtual void tick(double frame_time) = 0;
     virtual void render(RenderTexture2D* target);
-    std::vector<Texture*> loaded_textures;
-    std::vector<Sprite3d*> sprites;
     Config* config;
     Camera3D camera;
+    Simulation simulation;
     Shader lighting_shader;
     Shader shader;
+    bool done;
+    std::vector<Texture*> loaded_textures;
+    std::vector<Sprite3d*> sprites;
 };
 
-//class MainScreen: public Chunk {
-//public:
-//    void load() override;
-//    void unload() override;
-//protected:
-//    std::string id() override;
-//    void tick(double frame_time) override;
-//};
+class MainScreen: public Chunk {
+protected:
+    void load() override;
+    void unload() override;
+    std::string id() override;
+    void tick(double frame_time) override;
+    Light light;
+    float fog_density;
+};
 
 
 class Debug0: public Chunk {
@@ -69,8 +72,8 @@ protected:
     void unload() override;
     std::string id() override;
     void tick(double frame_time) override;
-    Simulation simulation;
     Light player_light;
+    float fog_density;
 };
 
 #endif //BADGAME_SCENE_H

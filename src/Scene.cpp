@@ -72,7 +72,7 @@ void Chunk::run(RenderTexture2D* target, Config* _config) {
     while (true) {
         std::chrono::system_clock::time_point frame_start = std::chrono::high_resolution_clock::now();
 
-        if (WindowShouldClose()) {
+        if (WindowShouldClose() | this->done) {
             break;
         }
 
@@ -89,6 +89,8 @@ void Chunk::run(RenderTexture2D* target, Config* _config) {
 
 
 void Debug0::load() {
+    this->done = false;
+
     HideCursor();
     DisableCursor();
 
@@ -144,9 +146,8 @@ void Debug0::load() {
     dBodySetKinematic(wall4->hitbox.body);
 
     Texture plasma = LoadTexture("resources/plasma.png");
-    Texture brick = LoadTexture("resources/brick.png");
 
-    this->loaded_textures = (std::vector<Texture*>) {&plasma, &brick};
+    this->loaded_textures = (std::vector<Texture*>) {&plasma};
 
     ball->model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = plasma;
     floor->model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = plasma;
@@ -164,7 +165,8 @@ void Debug0::load() {
     this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(this->lighting_shader, "viewPos");
 
     int fogDensityLoc = GetShaderLocation(this->lighting_shader, "fog_density");
-    SetShaderValue(this->lighting_shader, fogDensityLoc, &config->fog_density, SHADER_UNIFORM_FLOAT);
+    this->fog_density = 0;
+    SetShaderValue(this->lighting_shader, fogDensityLoc, &this->fog_density, SHADER_UNIFORM_FLOAT);
 
     this->player_light = CreateLight(LIGHT_POINT, (Vector3) {0, 5, 0}, ZERO_ZERO_ZERO, (Color) {10, 5, 0}, this->lighting_shader);
 
@@ -226,6 +228,78 @@ void Debug0::tick(double frame_time) {
 
     this->player_light.position = this->camera.position;
     UpdateLightValues(this->lighting_shader, this->player_light);
-    float camera_position[3] =  {camera.position.x, camera.position.y, camera.position.z};
+    float camera_position[3] = {camera.position.x, camera.position.y, camera.position.z};
     SetShaderValue(this->lighting_shader, this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW], camera_position, SHADER_UNIFORM_VEC3);
+}
+
+std::string MainScreen::id() {
+    return "main_screen";
+}
+
+void MainScreen::load() {
+    this->done = false;
+
+    HideCursor();
+    DisableCursor();
+
+    dInitODE2(0);
+
+    initialize_simulation(&this->simulation);
+
+    this->camera = (Camera3D) {(Vector3) { 0, 0, 0 },
+                               Vector3{ 9999, 1, 0},
+                               Vector3{ 0, 1, 0 },
+                               config->fov,
+                               CAMERA_PERSPECTIVE};
+
+
+    dMatrix3 wall_rotation;
+    dRFromEulerAngles(wall_rotation, PI, 0, 0);
+
+    auto* wall1 = new Sprite3d();
+    create_cuboid(&this->simulation, wall1, 1, 1, 5, 5);
+    set_position(&wall1->hitbox, 5, 0, 0);
+    dBodySetRotation(wall1->hitbox.body, wall_rotation);
+    dBodySetKinematic(wall1->hitbox.body);
+
+    Texture brick = LoadTexture("resources/brick.png");
+
+    this->loaded_textures = (std::vector<Texture*>) {&brick};
+
+    wall1->model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = brick;
+
+    this->sprites = (std::vector<Sprite3d*>) {wall1};
+
+    this->shader = LoadShader(nullptr, "resources/color_limit.fs");
+    this->lighting_shader = LoadShader("resources/lighting.vs",
+                                       "resources/fog.fs");
+
+    this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(this->lighting_shader, "viewPos");
+
+    int fogDensityLoc = GetShaderLocation(this->lighting_shader, "fog_density");
+    this->fog_density = 0.09f;
+    SetShaderValue(this->lighting_shader, fogDensityLoc, &this->fog_density, SHADER_UNIFORM_FLOAT);
+
+    this->light = CreateLight(LIGHT_POINT, (Vector3) {0, 2, 0}, ZERO_ZERO_ZERO, (Color) {100, 50, 0}, this->lighting_shader);
+
+    for (Sprite3d* sprite: this->sprites) {
+        sprite->model.materials[0].shader = this->lighting_shader;
+    }
+
+    UpdateLightValues(this->lighting_shader, this->light);
+    float camera_position[3] = {camera.position.x, camera.position.y, camera.position.z};
+    SetShaderValue(this->lighting_shader, this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW], camera_position, SHADER_UNIFORM_VEC3);
+}
+
+void MainScreen::unload() {
+    dCloseODE();
+    for (Texture* loaded_texture : this->loaded_textures) {
+        UnloadTexture(*loaded_texture);
+    }
+}
+
+void MainScreen::tick(double frame_time) {
+    if (IsKeyDown(KEY_SPACE) | IsKeyDown(KEY_SPACE)) {
+        this->done = true;
+    }
 }
