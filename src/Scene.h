@@ -38,18 +38,20 @@ void UpdateLightValues(Shader shader, Light light);
 
 class Chunk {
 public:
-    virtual void run(RenderTexture2D* target, Config* _config);
+    virtual void run(Config* _config);
 protected:
+    RenderTexture2D target;
     virtual void load() = 0;
     virtual void unload() = 0;
     virtual std::string id() = 0;
     virtual void tick(double frame_time) = 0;
-    virtual void render(RenderTexture2D* target);
+    virtual void render();
     Config* config;
     Camera3D camera;
     Simulation simulation;
     Shader lighting_shader;
     Shader shader;
+    float fog_density;
     bool done;
     std::vector<Texture*> loaded_textures;
     std::vector<Sprite3d*> sprites;
@@ -62,7 +64,6 @@ protected:
     std::string id() override;
     void tick(double frame_time) override;
     Light light;
-    float fog_density;
 };
 
 
@@ -73,7 +74,6 @@ protected:
     std::string id() override;
     void tick(double frame_time) override;
     Light player_light;
-    float fog_density;
 };
 
 #endif //BADGAME_SCENE_H

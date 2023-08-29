@@ -38,8 +38,8 @@ void UpdateLightValues(Shader shader, Light light){
 }
 
 
-void Chunk::render(RenderTexture2D* target) {
-    BeginTextureMode(*target);
+void Chunk::render() {
+    BeginTextureMode(this->target);
         ClearBackground(BLACK);
         BeginMode3D(this->camera);
             for (Sprite3d* sprite: this->sprites) {
@@ -50,24 +50,27 @@ void Chunk::render(RenderTexture2D* target) {
 
     const float scale = MIN((float) GetScreenWidth() / GAME_WIDTH, (float) GetScreenHeight() / GAME_HEIGHT);
     BeginDrawing();
+        ClearBackground(BLACK);
         BeginShaderMode(this->shader);
-            DrawTexturePro(target->texture,
-                           (Rectangle) {0.0f, 0.0f, (float) target->texture.width, (float) -target->texture.height},
+            DrawTexturePro(this->target.texture,
+                           (Rectangle) {0.0f, 0.0f, (float) this->target.texture.width, (float) -this->target.texture.height},
                            (Rectangle) {((float) GetScreenWidth() - ((float) GAME_WIDTH * scale)) * 0.5f,
                                         ((float) GetScreenHeight() - ((float) GAME_HEIGHT * scale)) * 0.5f,
                                         (float) GAME_WIDTH * scale, (float) GAME_HEIGHT * scale},
                            ZERO_ZERO,
                            0.0f,
-                           WHITE);
+                           BLACK);
         EndShaderMode();
-    DrawFPS((int) (.9 * GetScreenWidth()), (int) (.02 * GetScreenHeight()));
+        if (this->config->show_fps) {
+            DrawFPS((int) (.9 * GetScreenWidth()), (int) (.02 * GetScreenHeight()));
+        }
+
     EndDrawing();
 }
 
-void Chunk::run(RenderTexture2D* target, Config* _config) {
+void Chunk::run(Config* _config) {
     this->config = _config;
     this->load();
-    double fps = 0;
     double frame_time = 1.0 / 60;
     while (true) {
         std::chrono::system_clock::time_point frame_start = std::chrono::high_resolution_clock::now();
@@ -78,11 +81,10 @@ void Chunk::run(RenderTexture2D* target, Config* _config) {
 
         this->tick(frame_time);
 
-        this->render(target);
+        this->render();
 
         std::chrono::system_clock::time_point frame_end = std::chrono::high_resolution_clock::now();
         frame_time = MAX(((double)(std::chrono::duration_cast<std::chrono::nanoseconds>(frame_end - frame_start).count())) / 1e9, 1e-9);
-        fps = 1 / frame_time;
     }
     this->unload();
 }
@@ -97,6 +99,9 @@ void Debug0::load() {
     dInitODE2(0);
 
     initialize_simulation(&this->simulation);
+
+    this->target = LoadRenderTexture(RENDER_WIDTH, RENDER_HEIGHT);
+    SetTextureFilter(this->target.texture, TEXTURE_FILTER_BILINEAR);
 
     this->camera = (Camera3D) {(Vector3) { 0, 1, 0 },
                                    Vector3{ 9999, 1, 0},
@@ -165,7 +170,7 @@ void Debug0::load() {
     this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(this->lighting_shader, "viewPos");
 
     int fogDensityLoc = GetShaderLocation(this->lighting_shader, "fog_density");
-    this->fog_density = 0;
+    this->fog_density = 0.05f;
     SetShaderValue(this->lighting_shader, fogDensityLoc, &this->fog_density, SHADER_UNIFORM_FLOAT);
 
     this->player_light = CreateLight(LIGHT_POINT, (Vector3) {0, 5, 0}, ZERO_ZERO_ZERO, (Color) {10, 5, 0}, this->lighting_shader);
@@ -181,6 +186,9 @@ void Debug0::unload() {
     for (Texture* loaded_texture : this->loaded_textures) {
         UnloadTexture(*loaded_texture);
     }
+    UnloadShader(this->lighting_shader);
+    UnloadShader(this->shader);
+    UnloadRenderTexture(this->target);
 }
 
 std::string Debug0::id() {
@@ -246,6 +254,9 @@ void MainScreen::load() {
 
     initialize_simulation(&this->simulation);
 
+    this->target = LoadRenderTexture(RENDER_WIDTH, RENDER_HEIGHT);
+    SetTextureFilter(this->target.texture, TEXTURE_FILTER_BILINEAR);
+
     this->camera = (Camera3D) {(Vector3) { 0, 0, 0 },
                                Vector3{ 9999, 1, 0},
                                Vector3{ 0, 1, 0 },
@@ -296,6 +307,9 @@ void MainScreen::unload() {
     for (Texture* loaded_texture : this->loaded_textures) {
         UnloadTexture(*loaded_texture);
     }
+    UnloadShader(this->lighting_shader);
+    UnloadShader(this->shader);
+    UnloadRenderTexture(this->target);
 }
 
 void MainScreen::tick(double frame_time) {
