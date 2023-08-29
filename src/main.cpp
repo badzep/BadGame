@@ -23,8 +23,14 @@ int main() {
     SetWindowMinSize((int) GAME_WIDTH, (int) GAME_HEIGHT);
     SetExitKey(0);
 
+    bool shutdown;
     MainScreen main_screen;
-    main_screen.run(&config);
+    shutdown = main_screen.run(&config);
+
+    if (shutdown) {
+        CloseWindow();
+        return 0;
+    }
 
     Debug0 debug;
     debug.run(&config);

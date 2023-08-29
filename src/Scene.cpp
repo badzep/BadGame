@@ -68,25 +68,32 @@ void Chunk::render() {
     EndDrawing();
 }
 
-void Chunk::run(Config* _config) {
+bool Chunk::run(Config* _config) {
+    bool shutdown = false;
     this->config = _config;
     this->load();
     double frame_time = 1.0 / 60;
     while (true) {
         std::chrono::system_clock::time_point frame_start = std::chrono::high_resolution_clock::now();
 
-        if (WindowShouldClose() | this->done) {
-            break;
-        }
-
         this->tick(frame_time);
 
         this->render();
+
+        if (WindowShouldClose()) {
+            shutdown = true;
+            break;
+        }
+
+        if (this->done) {
+            break;
+        }
 
         std::chrono::system_clock::time_point frame_end = std::chrono::high_resolution_clock::now();
         frame_time = MAX(((double)(std::chrono::duration_cast<std::chrono::nanoseconds>(frame_end - frame_start).count())) / 1e9, 1e-9);
     }
     this->unload();
+    return shutdown;
 }
 
 
@@ -186,14 +193,12 @@ void Debug0::unload() {
     for (Texture* loaded_texture : this->loaded_textures) {
         UnloadTexture(*loaded_texture);
     }
+
     UnloadShader(this->lighting_shader);
     UnloadShader(this->shader);
     UnloadRenderTexture(this->target);
 }
 
-std::string Debug0::id() {
-    return "debug0";
-}
 
 void Debug0::tick(double frame_time) {
     Sprite3d* player = this->sprites[0];
@@ -238,10 +243,6 @@ void Debug0::tick(double frame_time) {
     UpdateLightValues(this->lighting_shader, this->player_light);
     float camera_position[3] = {camera.position.x, camera.position.y, camera.position.z};
     SetShaderValue(this->lighting_shader, this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW], camera_position, SHADER_UNIFORM_VEC3);
-}
-
-std::string MainScreen::id() {
-    return "main_screen";
 }
 
 void MainScreen::load() {

@@ -4,6 +4,7 @@
 
 #include "Constants.h"
 #include "Sprite.h"
+#include "GameObject.h"
 
 
 #include <iostream>
@@ -38,14 +39,9 @@ void UpdateLightValues(Shader shader, Light light);
 
 class Chunk {
 public:
-    virtual void run(Config* _config);
+    virtual bool run(Config* _config);
 protected:
     RenderTexture2D target;
-    virtual void load() = 0;
-    virtual void unload() = 0;
-    virtual std::string id() = 0;
-    virtual void tick(double frame_time) = 0;
-    virtual void render();
     Config* config;
     Camera3D camera;
     Simulation simulation;
@@ -53,15 +49,20 @@ protected:
     Shader shader;
     float fog_density;
     bool done;
+    std::vector<GameObject> game_objects;
     std::vector<Texture*> loaded_textures;
     std::vector<Sprite3d*> sprites;
+    const std::string id;
+    virtual void load() = 0;
+    virtual void unload() = 0;
+    virtual void tick(double frame_time) = 0;
+    virtual void render();
 };
 
 class MainScreen: public Chunk {
 protected:
     void load() override;
     void unload() override;
-    std::string id() override;
     void tick(double frame_time) override;
     Light light;
 };
@@ -71,7 +72,6 @@ class Debug0: public Chunk {
 protected:
     void load() override;
     void unload() override;
-    std::string id() override;
     void tick(double frame_time) override;
     Light player_light;
 };
