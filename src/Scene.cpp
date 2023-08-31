@@ -51,20 +51,20 @@ void Chunk::render() {
 
     const float scale = MIN((float) GetScreenWidth() / GAME_WIDTH, (float) GetScreenHeight() / GAME_HEIGHT);
     BeginDrawing();
-    ClearBackground(BLACK);
-    BeginShaderMode(this->shader);
-    DrawTexturePro(this->target.texture,
-                   (Rectangle) {0.0f, 0.0f, (float) this->target.texture.width, (float) -this->target.texture.height},
-                   (Rectangle) {((float) GetScreenWidth() - ((float) GAME_WIDTH * scale)) * 0.5f,
-                                ((float) GetScreenHeight() - ((float) GAME_HEIGHT * scale)) * 0.5f,
-                                (float) GAME_WIDTH * scale, (float) GAME_HEIGHT * scale},
-                   ZERO_ZERO,
-                   0.0f,
-                   BLACK);
-    EndShaderMode();
-    if (this->config->show_fps) {
-        DrawFPS((int) (.9 * GetScreenWidth()), (int) (.02 * GetScreenHeight()));
-    }
+        ClearBackground(BLACK);
+        BeginShaderMode(this->shader);
+            DrawTexturePro(this->target.texture,
+                           (Rectangle) {0.0f, 0.0f, (float) this->target.texture.width, (float) -this->target.texture.height},
+                           (Rectangle) {((float) GetScreenWidth() - ((float) GAME_WIDTH * scale)) * 0.5f,
+                                        ((float) GetScreenHeight() - ((float) GAME_HEIGHT * scale)) * 0.5f,
+                                        (float) GAME_WIDTH * scale, (float) GAME_HEIGHT * scale},
+                           ZERO_ZERO,
+                           0.0f,
+                           BLACK);
+        EndShaderMode();
+        if (this->config->show_fps) {
+            DrawFPS((int) (.9 * GetScreenWidth()), (int) (.02 * GetScreenHeight()));
+        }
 
     EndDrawing();
 }
@@ -99,6 +99,7 @@ bool Chunk::run(Config* _config) {
 
 
 void MainScreen::load() {
+    printf("Loading MainScreen\n");
     this->done = false;
 
     HideCursor();
@@ -152,6 +153,7 @@ void MainScreen::unload() {
     UnloadShader(this->lighting_shader);
     UnloadShader(this->shader);
     UnloadRenderTexture(this->target);
+    printf("Unloaded MainScreen\n");
 }
 
 void MainScreen::tick(double frame_time) {
@@ -166,12 +168,12 @@ std::string MainScreen::id() {
 
 
 void Debug0::load() {
+    printf("Loading debug0 scene\n");
     this->done = false;
+    dInitODE2(0);
 
     HideCursor();
     DisableCursor();
-
-    dInitODE2(0);
 
     initialize_simulation(&this->simulation);
 
@@ -188,12 +190,13 @@ void Debug0::load() {
     MainScreenWall2* main_screen_wall = new MainScreenWall2();
     main_screen_wall->factory(&this->simulation);
 
-    Player* player = new Player();
-    player->factory(&this->simulation);
 
-//    auto* ball = new Sprite3d();
-//    create_sphere(&this->simulation, ball, 100, .5);
-//    set_position(&ball->hitbox, 1, 1, 1);
+    this->player.factory(&this->simulation, &this->camera);
+
+    this->block.custom(&this->simulation, {0.0f, 5.0f, 0.0f}, {0, 0, 0}, {2, 2, 2}, "resources/plasma.png");
+
+    Ball* ball = new Ball();
+    ball->custom(&this->simulation, {1, 1, 1}, {0, 0, 0}, .5, "resources/plasma.png");
 
     Structure* floor = new Structure();
     floor->custom(&this->simulation, {0, -2, 0}, {0, 0, 0}, {50, 2, 50}, "resources/plasma.png");
@@ -211,16 +214,7 @@ void Debug0::load() {
     wall4->custom(&this->simulation, {0, 4, -24}, {0, 0, 0}, { 50, 50, 1}, "resources/plasma.png");
 
 
-    this->game_objects = {};
-    this->game_objects.push_back((GameObject*) (player));
-    this->game_objects.push_back((GameObject*) (main_screen_wall));
-    this->game_objects.push_back((GameObject*) (floor));
-    this->game_objects.push_back((GameObject*) (wall1));
-    this->game_objects.push_back((GameObject*) (wall2));
-    this->game_objects.push_back((GameObject*) (wall3));
-    this->game_objects.push_back((GameObject*) (wall4));
-
-
+    this->game_objects = (std::vector<GameObject*>) {&player, &block, ball, main_screen_wall, floor, wall1, wall2, wall3, wall4};
 
     this->shader = LoadShader(nullptr, "resources/color_limit.fs");
     this->lighting_shader = LoadShader("resources/lighting.vs",
@@ -236,22 +230,30 @@ void Debug0::load() {
     this->player_light = CreateLight(LIGHT_POINT, (Vector3) {0, 5, 0}, ZERO_ZERO_ZERO, (Color) {10, 5, 0}, this->lighting_shader);
 
     main_screen_wall->apply_shader(&this->lighting_shader);
+    this->block.apply_shader(&this->lighting_shader);
+    ball->apply_shader(&this->lighting_shader);
     floor->apply_shader(&this->lighting_shader);
     wall1->apply_shader(&this->lighting_shader);
     wall2->apply_shader(&this->lighting_shader);
     wall3->apply_shader(&this->lighting_shader);
     wall4->apply_shader(&this->lighting_shader);
-    for (GameObject* game_object: this->game_objects) {
+    printf("Loaded shaders\n");
+
+//    for (GameObject* game_object: this->game_objects) {
 //        game_object->model.materials[0].shader = this->lighting_shader;
-    }
+//    }
+
     for (GameObject* game_object: this->game_objects) {
         game_object->load();
     }
+    printf("Loaded GameObjects\n");
 
     UpdateLightValues(this->lighting_shader, this->player_light);
+    printf("UpdatingLightValues\n");
     float camera_position[3] = {camera.position.x, camera.position.y, camera.position.z};
     SetShaderValue(this->lighting_shader, this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW], camera_position, SHADER_UNIFORM_VEC3);
     printf("Finshed loading debug0 scene\n");
+
 }
 
 void Debug0::unload() {
@@ -262,10 +264,7 @@ void Debug0::unload() {
     UnloadRenderTexture(this->target);
 }
 
-
 void Debug0::tick(double frame_time) {
-    Player* player = (Player*) this->game_objects[0];
-
     Vector2 force = (Vector2) {0, 0};
     if (IsKeyDown(KEY_W)) {
         force.x += 1;
@@ -288,7 +287,8 @@ void Debug0::tick(double frame_time) {
     force = Vector2Rotate(force, angle);
     force = Vector2Normalize(force);
 
-    player->apply_force({force.x * PLAYER_MOVEMENT_SPEED * movement_speed_multiplier, 0, force.y * PLAYER_MOVEMENT_SPEED * movement_speed_multiplier});
+    this->player.apply_force({force.x * PLAYER_MOVEMENT_SPEED * movement_speed_multiplier, 0, force.y * PLAYER_MOVEMENT_SPEED * movement_speed_multiplier});
+
     dSpaceCollide(simulation.space, &this->simulation, &nearCallback);
     dWorldStep(simulation.world, frame_time);
     dJointGroupEmpty(simulation.contacts);
@@ -296,9 +296,10 @@ void Debug0::tick(double frame_time) {
     Vector2 mouse_delta = GetMouseDelta();
     UpdateCameraPro(&this->camera, ZERO_ZERO_ZERO, (Vector3) {mouse_delta.x * config->sensitivity, mouse_delta.y * config->sensitivity, 0}, 0);
 
-    this->camera.position = player->get_position();
-    printf("%f, %f, %f\n", this->camera.position.x,this->camera.position.y,this->camera.position.z);
-    this->camera.position.y += 0.5f;
+//    printf("%f, %f, %f\n", this->player.get_position().x, this->player.get_position().y, this->player.get_position().z);
+    this->player.update_camera();
+
+
     this->player_light.position = this->camera.position;
 
     UpdateLightValues(this->lighting_shader, this->player_light);

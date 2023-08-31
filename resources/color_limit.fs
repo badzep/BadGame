@@ -11,7 +11,8 @@ uniform vec4 colDiffuse;
 
 out vec4 finalColor;
 
-float numColors = 32.0;
+// float numColors = 32.0;
+float numColors = 15.0;
 
 void main()
 {

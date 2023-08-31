@@ -77,6 +77,8 @@ protected:
     void unload() override;
     void tick(double frame_time) override;
     Light player_light;
+    Player player;
+    Block block;
     std::string id() override;
 //     player;
 };
