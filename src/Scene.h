@@ -49,7 +49,7 @@ protected:
     float fog_density;
     bool done;
 
-    std::vector<BaseGameObject*> game_objects;
+    std::vector<GameObject*> game_objects;
 //    std::vector<GameObject*> game_objects;
 //    std::vector<Texture*> loaded_textures;
 //    std::vector<Sprite3d*> sprites;

@@ -7,15 +7,23 @@
 
 #include <raylib.h>
 #include <string>
+#include <utility>
 
 
-class BaseGameObject {
-public:
+class GameObject {
+protected:
     bool loaded = false;
+public:
     virtual void render() = 0;
     virtual void load() = 0;
     virtual void unload() = 0;
 };
+
+//class TwoDimensional {
+//public:
+//    virtual Vector2 get_position() = 0;
+//    virtual void set_position(Vector2 _position) = 0;
+//};
 
 class ThreeDimensionalLinearity {
 public:
@@ -29,39 +37,7 @@ protected:
     virtual void set_rotation(Vector3 euler_rotation) = 0;
 };
 
-//class TwoDimensional {
-//public:
-//    virtual Vector2 get_position() = 0;
-//    virtual void set_position(Vector2 _position) = 0;
-//};
-
-class Tangible3d: public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation {
-protected:
-    Hitbox3d hitbox;
-public:
-
-    Vector3 get_position() override {
-        const double* const position = dBodyGetPosition(this->hitbox.body);
-        return (Vector3) {(float) position[0], (float) position[1], (float) position[2]};
-    }
-    void set_position(Vector3 _position) override {
-        dBodySetPosition(this->hitbox.body, _position.x, _position.y, _position.z);
-    }
-};
-
-class Ghost3d: public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation {
-protected:
-    Vector3 position;
-public:
-    Vector3 get_position() override {
-        return this->position;
-    }
-    void set_position(Vector3 _position) override {
-        this->position = _position;
-    }
-};
-
-class WithModel: public BaseGameObject, public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation {
+class Model3d: public GameObject, public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation {
 protected:
     Model model;
     Texture texture;
@@ -71,6 +47,7 @@ protected:
 public:
     void render() override {
         if (!this->visible) {
+
             return;
         }
         this->update_model_rotation();
@@ -88,24 +65,67 @@ public:
         UnloadTexture(this->texture);
     }
 
-    void apply_shader(Shader* shader) {
+    void apply_shader(Shader* shader) const {
         this->model.materials[0].shader = *shader;
     }
 };
 
-class Ghost3dModelRotationLink: public virtual Ghost3d, public virtual WithModel {
+class Ghost3d: public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation {
 protected:
-    void update_model_rotation() override {
-        // nothing needed
+    Vector3 position;
+public:
+    Vector3 get_position() override {
+        return this->position;
     }
+    void set_position(Vector3 _position) override {
+        this->position = _position;
+    }
+};
+
+class Ghost3dModelRotationLink: public virtual Ghost3d, public virtual Model3d {
+protected:
+    void update_model_rotation() override {}
 public:
     void set_rotation(Vector3 euler_rotation) override {
         this->model.transform = QuaternionToMatrix(QuaternionFromEuler(euler_rotation.x, euler_rotation.y, euler_rotation.z));
     }
 };
 
+class Tangible3d: public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation {
+protected:
+    Hitbox3d hitbox;
+public:
+    Vector3 get_position() override {
+        const double* const position = dBodyGetPosition(this->hitbox.body);
+        return (Vector3) {(float) position[0], (float) position[1], (float) position[2]};
+    }
+    void set_position(Vector3 _position) override {
+        dBodySetPosition(this->hitbox.body, _position.x, _position.y, _position.z);
+    }
+    void apply_force(Vector3 force) const {
+        dBodyAddForce(this->hitbox.body, force.x, force.y, force.z);
+    }
+    void set_linear_dampening(double strength) const {
+        dBodySetLinearDamping(this->hitbox.body, strength);
+    }
+    void set_angular_dampening(double strength) const {
+        dBodySetAngularDamping(this->hitbox.body, strength);
+    }
+    void set_kinematic() const {
+        dBodySetKinematic(this->hitbox.body);
+    }
+    void set_dynamic() const {
+        dBodySetDynamic(this->hitbox.body);
+    }
+    void enable_gravity() {
+        dBodySetGravityMode(this->hitbox.body, 1);
+    }
+    void disable_gravity() {
+        dBodySetGravityMode(this->hitbox.body, 0);
+    }
+};
 
-class TangibleModelRotationLink: public virtual Tangible3d, public virtual WithModel {
+class TangibleModelRotationLink: public virtual Tangible3d, public virtual Model3d {
 protected:
     void update_model_rotation() override {
         const double* rotation = dBodyGetRotation(this->hitbox.body);
@@ -127,7 +147,7 @@ public:
     }
 };
 
-class TestObject: virtual public WithModel, virtual public Tangible3d, public TangibleModelRotationLink {
+class TestObject: virtual public Model3d, virtual public Tangible3d, public TangibleModelRotationLink {
 public:
     void factory(Simulation* simulation) {
         cuboid_hitbox(simulation, &this->hitbox, 10, 1, 5, 2);
@@ -137,8 +157,29 @@ public:
         this->texture_path = "resources/brick.png";
     }
 };
+class MainScreenWall2: virtual public Model3d, virtual public Ghost3d, public Ghost3dModelRotationLink {
+public:
+    void factory(Simulation* simulation) {
+        this->model = LoadModelFromMesh(GenMeshCube(1, 5, 5));
+        this->set_position({5, 1, 0});
+        this->set_rotation({0, PI/5, 0});
+        this->texture_path = "resources/brick.png";
+    }
+};
 
-class MainScreenWall: virtual public WithModel, public Ghost3dModelRotationLink {
+class Player: virtual public Tangible3d {
+private:
+    void set_rotation(Vector3 rotation) override {}
+public:
+    void factory(Simulation* simulation) {
+        cuboid_hitbox(simulation, &this->hitbox, 87.72f, .5, 2, .5);
+        this->set_position({0, 1, 0});
+        this->set_rotation({0, 0, 0});
+        this->set_angular_dampening(1);
+    }
+};
+
+class MainScreenWall: virtual public Model3d, virtual public Ghost3d, public Ghost3dModelRotationLink {
 public:
     void factory(Simulation* simulation) {
         this->model = LoadModelFromMesh(GenMeshCube(1, 5, 5));
@@ -148,106 +189,18 @@ public:
     }
 };
 
-//
-//class Tangible: public virtual BaseGameObject {
-//protected:
-//    Hitbox3d hitbox;
-//    Model model;
-//    Texture texture;
-//    bool visible = false;
-//    std::string texture_path;
-//public:
-//    Vector3 get_position();
-//    void set_position(Vector3 _position);
-//    void render() override {
-//        if (!this->visible) {
-//            return;
-//        }
-//        DrawModel(this->model, this->get_position(), 1, WHITE);
-//    }
-//
-//    void load() override {
-//        this->texture = LoadTexture(texture_path.c_str());
-//        SetMaterialTexture(&this->model.materials[0], MATERIAL_MAP_DIFFUSE, this->texture);
-//        this->loaded = true;
-//    }
-//    void unload() override {
-//        this->loaded = false;
-//        UnloadTexture(this->texture);
-//    }
-//};
+class Structure: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink {
+public:
+    void custom(Simulation* simulation, Vector3 position, Vector3 rotation, Vector3 size, std::string _texture_path) {
+        this->model = LoadModelFromMesh(GenMeshCube(size.x, size.y, size.z));
+        this->texture_path = std::move(_texture_path);
+        cuboid_hitbox(simulation, &this->hitbox, 100, size.x, size.y, size.z);
+        this->set_position(position);
+        this->set_rotation(rotation);
+        this->set_kinematic();
+    }
+};
 
-
-
-
-
-//void load() override {
-//this->loaded = true;
-//}
-//void unload() override {
-//this->loaded = false;
-//}
-//
-//class GameObject {
-//private:
-//    bool visible = true;
-//    bool loaded;
-//    virtual void load() = 0;
-//    virtual void unload() = 0;
-//protected:
-//    virtual void do_render(Camera* _camera) = 0;
-//public:
-//    void render(Camera* _camera);
-//    void do_load();
-//    void do_unload();
-//    bool is_loaded() const;
-//    virtual Vector3 get_position() = 0;
-//    virtual void set_position(const Vector3 _position) = 0;
-//};
-//
-//// does not automatically apply to model
-//class SimpleTexture: public virtual GameObject {
-//protected:
-//    Texture texture;
-//    std::string texture_path;
-//
-//    void load() override;
-//    void unload() override;
-//};
-//
-//class Ghost: public virtual GameObject {
-//protected:
-//    Vector3 position;
-//    Matrix rotation_matrix;
-//public:
-//    Vector3 get_position() override;
-//    void set_position(const Vector3 _position) override;
-//};
-//
-//
-//
-//class Sprite: public virtual GameObject {
-//public:
-//    Model model;
-//    Matrix base_rotation_matrix;
-//    virtual void update_model_rotation() = 0;
-//    virtual Matrix get_rotation_matrix() = 0;
-//    virtual void set_rotation_matrix(Vector3 euler_rotation) = 0;
-//    void do_render(Camera3D* _camera) override;
-//};
-//
-//class TexturedSprite: public virtual GameObject {
-//public:
-//    void apply_shader(Shader* shader);
-//protected:
-//    Texture texture;
-//    std::string texture_path;
-//
-//    void load() override;
-//    void unload() override;
-//};
-//
-//
 //class CameraLink: public virtual GameObject {
 //protected:
 //    Vector3 camera_linear_offset = (Vector3) {0, 0, 0};
@@ -257,42 +210,5 @@ public:
 //    void set_camera(Camera* _camera);
 //    void update_camera();
 //};
-//
-//class GhostSprite: public Ghost, public Sprite {
-//protected:
-//    void update_model_rotation() override;
-//    Matrix get_rotation_matrix() override;
-//    void set_rotation_matrix(Vector3 euler_rotation) override;
-//};
-//
-//class TangibleSprite: public virtual Tangible, public virtual Sprite {
-//protected:
-//    void update_model_rotation() override;
-//    Matrix get_rotation_matrix() override;
-//    void set_rotation_matrix(Vector3 euler_rotation) override;
-//};
-//
-//class TestWall: public GhostSprite, public TexturedSprite {
-//public:
-//    static TestWall factory();
-//};
-//
-//class Billboard: public virtual Ghost, public virtual SimpleTexture {
-//public:
-//    void do_render(Camera3D* _camera) override;
-//};
-//
-//class Text: public virtual Ghost {
-//protected:
-//    Font font;
-//    float font_size;
-//    Color color;
-//public:
-//    std::string text;
-//    void load() override;
-//    void unload() override;
-//    void do_render(Camera3D* _camera) override;
-//};
-
 
 #endif //BADGAME_GAMEOBJECT_H
