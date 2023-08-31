@@ -207,6 +207,14 @@ void Billboard::unload() {
     this->loaded = true;
 }
 
+void Billboard::set_camera(Camera *_camera) {
+    this->camera = _camera;
+}
+
+void Billboard::render() {
+    DrawBillboard(*this->camera, *this->get_texture(), this->get_position(), this->size, this->color);
+}
+
 void SharedTexture::share_texture(Texture *texture) {
     this->shared_texture = texture;
 }
@@ -221,4 +229,12 @@ void SharedTexture::release_texture() {
 
 Texture *SharedTexture::get_texture() {
     return this->shared_texture;
+}
+
+Color Colored::get_color() {
+    return this->color;
+}
+
+void Colored::set_color(Color _color) {
+    this->color = _color;
 }

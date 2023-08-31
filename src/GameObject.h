@@ -19,6 +19,14 @@ public:
     bool is_loaded() const;
 };
 
+class Colored {
+protected:
+    Color color;
+public:
+    Color get_color();
+    void set_color(Color _color);
+};
+
 class Textured {
 protected:
     virtual void load_texture() = 0;
@@ -44,7 +52,7 @@ protected:
 
 class SharedTexture: public virtual Textured {
 protected:
-    Texture* shared_texture{};
+    Texture* shared_texture;
     void load_texture() override;
     void release_texture() override;
     Texture* get_texture() override;
@@ -64,12 +72,11 @@ public:
     }
 };
 
-class Text: public GameObject, public TwoDimensionalLinearity {
+class Text: public GameObject, public TwoDimensionalLinearity, public Colored {
 protected:
     Font font;
     float font_size;
     float spacing;
-    Color color;
     std::string text;
 public:
     void load() override {
@@ -90,22 +97,25 @@ public:
 };
 
 class ThreeDimensionalRotation {
-protected:
+public:
     virtual void set_rotation(Vector3 euler_rotation) = 0;
 };
 
-class Billboard: public virtual GameObject, public ThreeDimensionalLinearity, public virtual Textured {
+class Billboard: public virtual GameObject, public ThreeDimensionalLinearity, public virtual Textured, public Colored {
+protected:
+    Vector3 position;
+    float size;
+    Camera* camera;
 public:
     void load() override;
     void unload() override;
-    void render() override {
-        // TODO
-    }
+    void render() override;
+    void set_camera(Camera* _camera);
 };
 
 class Model3d: public GameObject, public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation, public virtual Textured {
 protected:
-    Model model{};
+    Model model;
     bool visible = true;
     virtual void update_model_rotation() = 0;
 public:
@@ -117,7 +127,7 @@ public:
 
 class Ghost3d: public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation {
 protected:
-    Vector3 position{};
+    Vector3 position;
 public:
     Vector3 get_position() override;
     void set_position(Vector3 _position) override;
@@ -154,8 +164,8 @@ public:
 
 class CameraLink: public virtual ThreeDimensionalLinearity {
 protected:
-    Camera* camera{};
-    Vector3 camera_linear_offset{};
+    Camera* camera;
+    Vector3 camera_linear_offset;
 public:
     void set_camera(Camera* _camera);
     Vector3 get_camera_linear_offset();
