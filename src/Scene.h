@@ -36,7 +36,6 @@ typedef enum {
 Light CreateLight(int type, Vector3 position, Vector3 target, Color color, Shader shader);
 void UpdateLightValues(Shader shader, Light light);
 
-
 class Chunk {
 public:
     virtual bool run(Config* _config);
@@ -49,17 +48,21 @@ protected:
     Shader shader;
     float fog_density;
     bool done;
-    std::vector<GameObject> game_objects;
-    std::vector<Texture*> loaded_textures;
-    std::vector<Sprite3d*> sprites;
-    const std::string id;
+
+    std::vector<BaseGameObject*> game_objects;
+//    std::vector<GameObject*> game_objects;
+//    std::vector<Texture*> loaded_textures;
+//    std::vector<Sprite3d*> sprites;
+    void render();
+    virtual std::string id() = 0;
     virtual void load() = 0;
     virtual void unload() = 0;
     virtual void tick(double frame_time) = 0;
-    virtual void render();
 };
 
 class MainScreen: public Chunk {
+private:
+    std::string id() override;
 protected:
     void load() override;
     void unload() override;
@@ -74,6 +77,8 @@ protected:
     void unload() override;
     void tick(double frame_time) override;
     Light player_light;
+    std::string id() override;
+//     player;
 };
 
 #endif //BADGAME_SCENE_H

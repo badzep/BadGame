@@ -32,8 +32,8 @@ int main() {
         return 0;
     }
 
-    Debug0 debug;
-    debug.run(&config);
+//    Debug0 debug;
+//    debug.run(&config);
 
     CloseWindow();
     return 0;
