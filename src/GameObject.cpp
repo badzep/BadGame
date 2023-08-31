@@ -6,7 +6,7 @@
 
 
 void Model3d::render() {
-    if (!this->visible) {
+    if (!this->visible | !this->is_loaded()) {
         return;
     }
     this->update_model_rotation();
@@ -14,15 +14,19 @@ void Model3d::render() {
 }
 
 void Model3d::load() {
-    this->base_rotation_matrix = this->model.transform;
-    this->texture = LoadTexture(texture_path.c_str());
-    SetMaterialTexture(&this->model.materials[0], MATERIAL_MAP_DIFFUSE, this->texture);
+    if (this->is_loaded()) {
+        return;
+    }
+    this->load_texture();
+    SetMaterialTexture(&this->model.materials[0], MATERIAL_MAP_DIFFUSE, *this->get_texture());
     this->loaded = true;
 }
-
 void Model3d::unload() {
+    if (!this->is_loaded()) {
+        return;
+    }
+    this->release_texture();
     this->loaded = false;
-    UnloadTexture(this->texture);
 }
 
 void Model3d::apply_shader(Shader *shader) const {
@@ -100,26 +104,10 @@ void TangibleModelRotationLink::update_model_rotation() {
     this->model.transform.m15 = 1;
 }
 
-void TangibleModelRotationLink::set_rotation(Vector3 euler_rotation) {
+void TangibleModelRotationLink::set_rotation(const Vector3 euler_rotation) {
     dMatrix3 rotation;
     dRFromEulerAngles(rotation, euler_rotation.x, euler_rotation.y, euler_rotation.z);
     dBodySetRotation(this->hitbox.body, rotation);
-}
-
-void TestObject::factory(Simulation *simulation) {
-    this->model = LoadModelFromMesh(GenMeshCube(1, 5, 2));
-    this->texture_path = "resources/brick.png";
-
-    cuboid_hitbox(simulation, &this->hitbox, 10, 1, 5, 2);
-    this->set_position({6, 3, 0});
-    this->set_rotation({0, PI/4, 0});
-}
-
-void MainScreenWall2::factory() {
-    this->model = LoadModelFromMesh(GenMeshCube(1, 5, 5));
-    this->set_position({5, 1, 0});
-    this->set_rotation({0, PI/5, 0});
-    this->texture_path = "resources/brick.png";
 }
 
 void CameraLink::set_camera(Camera *_camera) {
@@ -165,34 +153,36 @@ void Player::factory(Simulation *simulation, Camera *camera) {
     this->update_camera();
 }
 
-void MainScreenWall::factory(Simulation *simulation) {
+void Player::render() {
+}
+
+void MainScreenWall::factory() {
     this->model = LoadModelFromMesh(GenMeshCube(1, 5, 5));
     this->set_position({5, 0, 0});
     this->set_rotation({0, PI/5, 0});
     this->texture_path = "resources/brick.png";
 }
 
-void
-Structure::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, const std::string& _texture_path) {
+void Structure::custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, Texture* external_texture) {
     this->model = LoadModelFromMesh(GenMeshCube(size.x, size.y, size.z));
-    this->texture_path = _texture_path;
+    this->share_texture(external_texture);
     cuboid_hitbox(simulation, &this->hitbox, 100, size.x, size.y, size.z);
     this->set_position(position);
     this->set_rotation(rotation);
     this->set_kinematic();
 }
 
-void Block::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, const float mass, const std::string& _texture_path) {
+void Block::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, const float mass, Texture* external_texture) {
     this->model = LoadModelFromMesh(GenMeshCube(size.x, size.y, size.z));
-    this->texture_path = _texture_path;
+    this->share_texture(external_texture);
     cuboid_hitbox(simulation, &this->hitbox, mass, size.x, size.y, size.z);
     this->set_position(position);
     this->set_rotation(rotation);
 }
 
-void Ball::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation, const float radius, const float mass, const std::string& _texture_path) {
+void Ball::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation, const float radius, const float mass, Texture* external_texture) {
     this->model = LoadModelFromMesh(GenMeshSphere(radius, 10, 50));
-    this->texture_path = _texture_path;
+    this->share_texture(external_texture);
     sphere_hitbox(simulation, &this->hitbox, mass, radius);
     this->set_position(position);
     this->set_rotation(rotation);

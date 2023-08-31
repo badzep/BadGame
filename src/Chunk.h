@@ -77,8 +77,9 @@ protected:
     Light player_light;
     Player player;
     Block block;
+    Texture plasma;
+    Texture brick;
     std::string id() override;
-//     player;
 };
 
 #endif //BADGAME_CHUNK_H

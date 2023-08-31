@@ -38,11 +38,13 @@ void UpdateLightValues(Shader shader, Light light){
 }
 
 void Chunk::render() {
-
     BeginTextureMode(this->target);
         ClearBackground(BLACK);
         BeginMode3D(this->camera);
             for (GameObject* game_object: this->game_objects) {
+                if (!game_object->is_loaded()) {
+                    continue;
+                }
                 game_object->render();
             }
         EndMode3D();
@@ -71,7 +73,11 @@ void Chunk::render() {
 bool Chunk::run(Config* _config) {
     bool shutdown = false;
     this->config = _config;
+
+    printf("Loading chunk %s\n", this->id().c_str());
     this->load();
+    printf("Loaded chunk %s\n", this->id().c_str());
+
     double frame_time = 1.0 / 60;
     while (true) {
         std::chrono::system_clock::time_point frame_start = std::chrono::high_resolution_clock::now();
@@ -81,6 +87,7 @@ bool Chunk::run(Config* _config) {
         this->render();
 
         if (WindowShouldClose()) {
+            printf("Shutdown Starting from chunk %s\n", this->id().c_str());
             shutdown = true;
             break;
         }
@@ -92,13 +99,16 @@ bool Chunk::run(Config* _config) {
         std::chrono::system_clock::time_point frame_end = std::chrono::high_resolution_clock::now();
         frame_time = MAX(((double)(std::chrono::duration_cast<std::chrono::nanoseconds>(frame_end - frame_start).count())) / 1e9, 1e-9);
     }
+
+    printf("Unloading chunk %s\n", this->id().c_str());
     this->unload();
+    printf("Unloaded chunk %s\n", this->id().c_str());
+
     return shutdown;
 }
 
 
 void MainScreen::load() {
-    printf("Loading MainScreen\n");
     this->done = false;
 
     HideCursor();
@@ -107,9 +117,9 @@ void MainScreen::load() {
     this->target = LoadRenderTexture(RENDER_WIDTH, RENDER_HEIGHT);
     SetTextureFilter(this->target.texture, TEXTURE_FILTER_BILINEAR);
 
-    this->camera = (Camera3D) {(Vector3) {0, 0, 0},
-                               Vector3{9999, 1, 0},
-                               Vector3{0, 1, 0},
+    this->camera = (Camera3D) {{0, 0, 0},
+                               {9999, 1, 0},
+                               {0, 1, 0},
                                config->fov,
                                CAMERA_PERSPECTIVE};
 
@@ -125,16 +135,19 @@ void MainScreen::load() {
     this->fog_density = 0.09f;
     SetShaderValue(this->lighting_shader, fogDensityLoc, &this->fog_density, SHADER_UNIFORM_FLOAT);
 
-    this->light = CreateLight(LIGHT_POINT, (Vector3) {0, 2, 0}, ZERO_ZERO_ZERO, (Color) {100, 50, 0}, this->lighting_shader);
+    this->light = CreateLight(LIGHT_POINT, Vector3{0, 2, 0}, ZERO_ZERO_ZERO, Color{100, 50, 0}, this->lighting_shader);
 
     MainScreenWall* main_screen_wall = new MainScreenWall();
-    main_screen_wall->factory(&this->simulation);
+    main_screen_wall->factory();
 
     this->game_objects = (std::vector<GameObject*>) {main_screen_wall};
 
     main_screen_wall->apply_shader(&this->lighting_shader);
 
     for (GameObject* game_object: this->game_objects) {
+        if (game_object->is_loaded()) {
+            continue;
+        }
         game_object->load();
     }
 
@@ -145,12 +158,14 @@ void MainScreen::load() {
 
 void MainScreen::unload() {
     for (GameObject* game_object: this->game_objects) {
+        if (!game_object->is_loaded()) {
+            continue;
+        }
         game_object->unload();
     }
     UnloadShader(this->lighting_shader);
     UnloadShader(this->shader);
     UnloadRenderTexture(this->target);
-    printf("Unloaded MainScreen\n");
 }
 
 void MainScreen::tick(double frame_time) {
@@ -164,7 +179,6 @@ std::string MainScreen::id() {
 }
 
 void Debug0::load() {
-    printf("Loading debug0 scene\n");
     this->done = false;
     dInitODE2(0);
 
@@ -176,40 +190,40 @@ void Debug0::load() {
     this->target = LoadRenderTexture(RENDER_WIDTH, RENDER_HEIGHT);
     SetTextureFilter(this->target.texture, TEXTURE_FILTER_BILINEAR);
 
-    this->camera = (Camera3D) {(Vector3) { 0, 1, 0 },
-                               Vector3{ 9999, 1, 0},
-                               Vector3{ 0, 1, 0 },
+    this->camera = (Camera3D) {Vector3{0, 1, 0},
+                               Vector3{9999, 1, 0},
+                               Vector3{0, 1, 0},
                                config->fov,
                                CAMERA_PERSPECTIVE};
 
 
-    MainScreenWall2* main_screen_wall = new MainScreenWall2();
-    main_screen_wall->factory();
-
     this->player.factory(&this->simulation, &this->camera);
 
-    this->block.custom(&this->simulation, {0.0f, 5.0f, 0.0f}, {0, 0, 0}, {2, 2, 2}, 100, "resources/plasma.png");
+    this->plasma = LoadTexture("resources/plasma.png");
+    this->brick = LoadTexture("resources/brick.png");
+
+    this->block.custom(&this->simulation, Vector3{0.0f, 5.0f, 0.0f}, Vector3{0, 0, 0}, Vector3{2, 2, 2}, 100, &plasma);
 
     Ball* ball = new Ball();
-    ball->custom(&this->simulation, {1, 1, 1}, {0, 0, 0}, .5, 100, "resources/plasma.png");
+    ball->custom(&this->simulation, Vector3{1, 1, 1}, Vector3{0, 0, 0}, .5, 100, &plasma);
 
     Structure* floor = new Structure();
-    floor->custom(&this->simulation, {0, -2, 0}, {0, 0, 0}, {50, 2, 50}, "resources/plasma.png");
+    floor->custom(&this->simulation, Vector3{0, -2, 0}, Vector3{0, 0, 0}, {50, 2, 50}, &plasma);
 
     Structure* wall1 = new Structure();
-    wall1->custom(&this->simulation, {24, 4, 0}, {0, 0, 0}, {1, 50, 50}, "resources/plasma.png");
+    wall1->custom(&this->simulation, Vector3{24, 4, 0}, Vector3{0, 0, 0}, Vector3{1, 50, 50}, &brick);
 
     Structure* wall2 = new Structure();
-    wall2->custom(&this->simulation, {-24, 4, 0}, {0, 0, 0}, {1, 50, 50}, "resources/plasma.png");
+    wall2->custom(&this->simulation, Vector3{-24, 4, 0}, Vector3{0, 0, 0}, Vector3{1, 50, 50}, &brick);
 
     Structure* wall3 = new Structure();
-    wall3->custom(&this->simulation, {0, 4, 24}, {0, 0, 0}, {50, 50, 1}, "resources/plasma.png");
+    wall3->custom(&this->simulation, Vector3{0, 4, 24}, Vector3{0, 0, 0}, Vector3{50, 50, 1}, &brick);
 
     Structure* wall4 = new Structure();
-    wall4->custom(&this->simulation, {0, 4, -24}, {0, 0, 0}, { 50, 50, 1}, "resources/plasma.png");
+    wall4->custom(&this->simulation, Vector3{0, 4, -24}, Vector3{0, 0, 0}, Vector3{ 50, 50, 1}, &brick);
 
 
-    this->game_objects = (std::vector<GameObject*>) {&player, &block, ball, main_screen_wall, floor, wall1, wall2, wall3, wall4};
+    this->game_objects = (std::vector<GameObject*>) {&player, &block, ball, floor, wall1, wall2, wall3, wall4};
 
     this->shader = LoadShader(nullptr, "resources/color_limit.fs");
     this->lighting_shader = LoadShader("resources/lighting.vs",
@@ -223,7 +237,6 @@ void Debug0::load() {
 
     this->player_light = CreateLight(LIGHT_POINT, (Vector3) {0, 5, 0}, ZERO_ZERO_ZERO, (Color) {10, 5, 0}, this->lighting_shader);
 
-    main_screen_wall->apply_shader(&this->lighting_shader);
     this->block.apply_shader(&this->lighting_shader);
     ball->apply_shader(&this->lighting_shader);
     floor->apply_shader(&this->lighting_shader);
@@ -231,28 +244,23 @@ void Debug0::load() {
     wall2->apply_shader(&this->lighting_shader);
     wall3->apply_shader(&this->lighting_shader);
     wall4->apply_shader(&this->lighting_shader);
-    printf("Loaded shaders\n");
-
 
     for (GameObject* game_object: this->game_objects) {
         game_object->load();
     }
-    printf("Loaded GameObjects\n");
 
     UpdateLightValues(this->lighting_shader, this->player_light);
-    printf("UpdatingLightValues\n");
     float camera_position[3] = {camera.position.x, camera.position.y, camera.position.z};
     SetShaderValue(this->lighting_shader, this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW], camera_position, SHADER_UNIFORM_VEC3);
-    printf("Finshed loading debug0 scene\n");
-
 }
 
 void Debug0::unload() {
     dCloseODE();
-
     UnloadShader(this->lighting_shader);
     UnloadShader(this->shader);
     UnloadRenderTexture(this->target);
+    UnloadTexture(this->plasma);
+    UnloadTexture(this->brick);
 }
 
 void Debug0::tick(double frame_time) {

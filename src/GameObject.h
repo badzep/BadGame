@@ -16,13 +16,26 @@ public:
     virtual void render() = 0;
     virtual void load() = 0;
     virtual void unload() = 0;
+    bool is_loaded() const {
+        return this->loaded;
+    }
 };
 
-//class TwoDimensional {
-//public:
-//    virtual Vector2 get_position() = 0;
-//    virtual void set_position(Vector2 _position) = 0;
-//};
+class TwoDimensionalLinearity {
+public:
+    virtual Vector2 get_position() = 0;
+    virtual void set_position(Vector2 _position) = 0;
+};
+
+class Text: public GameObject, public TwoDimensionalLinearity {
+public:
+    void load() override {
+        this->loaded = true;
+    }
+    void unload() override {
+        this->loaded = false;
+    }
+};
 
 class ThreeDimensionalLinearity {
 public:
@@ -32,23 +45,61 @@ public:
 
 class ThreeDimensionalRotation {
 protected:
-    Matrix base_rotation_matrix;
     virtual void set_rotation(Vector3 euler_rotation) = 0;
 };
 
-class Model3d: public GameObject, public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation {
+class Billboard: public virtual GameObject, public ThreeDimensionalLinearity {
+
+};
+
+class Textured {
 protected:
-    Model model;
+    virtual void load_texture() = 0;
+    virtual void release_texture() = 0;
+    virtual Texture* get_texture() = 0;
+};
+
+class IndependentTexture: public virtual Textured {
+protected:
     Texture texture;
     std::string texture_path;
+protected:
+    void load_texture() override {
+        this->texture = LoadTexture(texture_path.c_str());
+    }
+    void release_texture() override {
+        UnloadTexture(this->texture);
+    }
+    Texture* get_texture() override {
+        return &this->texture;
+    }
+};
+
+class SharedTexture: public virtual Textured {
+protected:
+    Texture* shared_texture;
+    void load_texture() override {
+    }
+    void release_texture() override {
+    }
+    Texture* get_texture() override {
+        return this->shared_texture;
+    }
+public:
+    void share_texture(Texture* texture) {
+        this->shared_texture = texture;
+    }
+};
+
+class Model3d: public GameObject, public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation, public virtual Textured {
+protected:
+    Model model;
     bool visible = true;
     virtual void update_model_rotation() = 0;
 public:
     void render() override;
-
     void load() override;
     void unload() override;
-
     void apply_shader(Shader* shader) const;
 };
 
@@ -86,19 +137,9 @@ class TangibleModelRotationLink: public virtual Tangible3d, public virtual Model
 protected:
     void update_model_rotation() override;
 public:
-    void set_rotation(Vector3 euler_rotation) override;
+    void set_rotation(const Vector3 euler_rotation) override;
 };
 
-
-
-class TestObject: virtual public Model3d, virtual public Tangible3d, public TangibleModelRotationLink {
-public:
-    void factory(Simulation* simulation);
-};
-class MainScreenWall2: virtual public Model3d, virtual public Ghost3d, public Ghost3dModelRotationLink {
-public:
-    void factory();
-};
 
 class CameraLink: public virtual ThreeDimensionalLinearity {
 protected:
@@ -116,33 +157,29 @@ class Player: public GameObject, public Tangible3d, public CameraLink {
 public:
     void load() override;
     void unload() override;
-    void render() override {
-
-    }
+    void render() override;
     void set_rotation(Vector3 euler_rotation) override;
     void factory(Simulation* simulation, Camera* camera);
 };
 
-
-class MainScreenWall: virtual public Model3d, virtual public Ghost3d, public Ghost3dModelRotationLink {
+class MainScreenWall: virtual public Model3d, virtual public Ghost3d, public Ghost3dModelRotationLink, public IndependentTexture {
 public:
-    void factory(Simulation* simulation);
+    void factory();
 };
 
-class Structure: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink {
+class Structure: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink, public SharedTexture {
 public:
-    void custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, const std::string& _texture_path);
-
+    void custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, Texture* external_texture);
 };
 
-class Block: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink {
+class Block: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink, public SharedTexture  {
 public:
-    void custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, const float mass, const std::string& _texture_path);
+    void custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, const float mass, Texture* external_texture);
 };
 
-class Ball: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink {
+class Ball: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink, public SharedTexture  {
 public:
-    void custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const float radius, const float mass, const std::string& _texture_path);
+    void custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const float radius, const float mass, Texture* external_texture);
 };
 
 #endif //BADGAME_GAMEOBJECT_H
