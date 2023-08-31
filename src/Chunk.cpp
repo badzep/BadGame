@@ -1,4 +1,4 @@
-#include "Scene.h"
+#include "Chunk.h"
 #include "GameObject.h"
 
 
@@ -36,7 +36,6 @@ void UpdateLightValues(Shader shader, Light light){
                        (float)light.color.b/(float)255, (float)light.color.a/(float)255};
     SetShaderValue(shader, light.colorLoc, color, SHADER_UNIFORM_VEC4);
 }
-
 
 void Chunk::render() {
 
@@ -128,7 +127,6 @@ void MainScreen::load() {
 
     this->light = CreateLight(LIGHT_POINT, (Vector3) {0, 2, 0}, ZERO_ZERO_ZERO, (Color) {100, 50, 0}, this->lighting_shader);
 
-
     MainScreenWall* main_screen_wall = new MainScreenWall();
     main_screen_wall->factory(&this->simulation);
 
@@ -149,7 +147,6 @@ void MainScreen::unload() {
     for (GameObject* game_object: this->game_objects) {
         game_object->unload();
     }
-
     UnloadShader(this->lighting_shader);
     UnloadShader(this->shader);
     UnloadRenderTexture(this->target);
@@ -165,7 +162,6 @@ void MainScreen::tick(double frame_time) {
 std::string MainScreen::id() {
     return "main_screen";
 }
-
 
 void Debug0::load() {
     printf("Loading debug0 scene\n");
@@ -188,15 +184,14 @@ void Debug0::load() {
 
 
     MainScreenWall2* main_screen_wall = new MainScreenWall2();
-    main_screen_wall->factory(&this->simulation);
-
+    main_screen_wall->factory();
 
     this->player.factory(&this->simulation, &this->camera);
 
-    this->block.custom(&this->simulation, {0.0f, 5.0f, 0.0f}, {0, 0, 0}, {2, 2, 2}, "resources/plasma.png");
+    this->block.custom(&this->simulation, {0.0f, 5.0f, 0.0f}, {0, 0, 0}, {2, 2, 2}, 100, "resources/plasma.png");
 
     Ball* ball = new Ball();
-    ball->custom(&this->simulation, {1, 1, 1}, {0, 0, 0}, .5, "resources/plasma.png");
+    ball->custom(&this->simulation, {1, 1, 1}, {0, 0, 0}, .5, 100, "resources/plasma.png");
 
     Structure* floor = new Structure();
     floor->custom(&this->simulation, {0, -2, 0}, {0, 0, 0}, {50, 2, 50}, "resources/plasma.png");
@@ -223,8 +218,7 @@ void Debug0::load() {
     this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(this->lighting_shader, "viewPos");
 
     int fogDensityLoc = GetShaderLocation(this->lighting_shader, "fog_density");
-//    this->fog_density = 0.05f;
-    this->fog_density = 0.f;
+    this->fog_density = 0.05f;
     SetShaderValue(this->lighting_shader, fogDensityLoc, &this->fog_density, SHADER_UNIFORM_FLOAT);
 
     this->player_light = CreateLight(LIGHT_POINT, (Vector3) {0, 5, 0}, ZERO_ZERO_ZERO, (Color) {10, 5, 0}, this->lighting_shader);
@@ -239,9 +233,6 @@ void Debug0::load() {
     wall4->apply_shader(&this->lighting_shader);
     printf("Loaded shaders\n");
 
-//    for (GameObject* game_object: this->game_objects) {
-//        game_object->model.materials[0].shader = this->lighting_shader;
-//    }
 
     for (GameObject* game_object: this->game_objects) {
         game_object->load();
@@ -298,7 +289,6 @@ void Debug0::tick(double frame_time) {
 
 //    printf("%f, %f, %f\n", this->player.get_position().x, this->player.get_position().y, this->player.get_position().z);
     this->player.update_camera();
-
 
     this->player_light.position = this->camera.position;
 

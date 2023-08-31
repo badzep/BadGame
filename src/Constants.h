@@ -2,9 +2,11 @@
 #define BADGAME_CONSTANTS_H
 
 
+#include "Config.h"
+
+
 #include <ode/ode.h>
 #include <raylib.h>
-#include "Config.h"
 
 
 #define MIN(a, b) ((a)<(b)? (a) : (b))

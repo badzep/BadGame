@@ -1,5 +1,5 @@
-#ifndef BADGAME_SCENE_H
-#define BADGAME_SCENE_H
+#ifndef BADGAME_CHUNK_H
+#define BADGAME_CHUNK_H
 
 
 #include "Constants.h"
@@ -50,9 +50,7 @@ protected:
     bool done;
 
     std::vector<GameObject*> game_objects;
-//    std::vector<GameObject*> game_objects;
-//    std::vector<Texture*> loaded_textures;
-//    std::vector<Sprite3d*> sprites;
+
     void render();
     virtual std::string id() = 0;
     virtual void load() = 0;
@@ -83,5 +81,5 @@ protected:
 //     player;
 };
 
-#endif //BADGAME_SCENE_H
+#endif //BADGAME_CHUNK_H
 

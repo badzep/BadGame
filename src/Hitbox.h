@@ -15,8 +15,6 @@ typedef struct {
 } Hitbox3d;
 
 
-void set_position(Hitbox3d* hitbox, double x, double y, double z);
-
 void cuboid_hitbox(Simulation* simulation, Hitbox3d* hitbox, const double mass, const double size_x, const double size_y, const double size_z);
 
 void sphere_hitbox(Simulation* simulation, Hitbox3d* hitbox, const double mass, const double radius);
