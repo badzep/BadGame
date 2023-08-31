@@ -4,6 +4,9 @@
 #include <raylib.h>
 #include <raymath.h>
 
+bool GameObject::is_loaded() const {
+    return this->loaded;
+}
 
 void Model3d::render() {
     if (!this->visible | !this->is_loaded()) {
@@ -37,13 +40,13 @@ Vector3 Ghost3d::get_position() {
     return this->position;
 }
 
-void Ghost3d::set_position(Vector3 _position) {
+void Ghost3d::set_position(const Vector3 _position) {
     this->position = _position;
 }
 
 void Ghost3dModelRotationLink::update_model_rotation() {}
 
-void Ghost3dModelRotationLink::set_rotation(Vector3 euler_rotation) {
+void Ghost3dModelRotationLink::set_rotation(const Vector3 euler_rotation) {
     this->model.transform = QuaternionToMatrix(QuaternionFromEuler(euler_rotation.x, euler_rotation.y, euler_rotation.z));
 }
 
@@ -52,19 +55,19 @@ Vector3 Tangible3d::get_position() {
     return (Vector3) {(float) position[0], (float) position[1], (float) position[2]};
 }
 
-void Tangible3d::set_position(Vector3 _position) {
+void Tangible3d::set_position(const Vector3 _position) {
     dBodySetPosition(this->hitbox.body, _position.x, _position.y, _position.z);
 }
 
-void Tangible3d::apply_force(Vector3 force) const {
+void Tangible3d::apply_force(const Vector3 force) const {
     dBodyAddForce(this->hitbox.body, force.x, force.y, force.z);
 }
 
-void Tangible3d::set_linear_dampening(double strength) const {
+void Tangible3d::set_linear_dampening(const double strength) const {
     dBodySetLinearDamping(this->hitbox.body, strength);
 }
 
-void Tangible3d::set_angular_dampening(double strength) const {
+void Tangible3d::set_angular_dampening(const double strength) const {
     dBodySetAngularDamping(this->hitbox.body, strength);
 }
 
@@ -186,4 +189,36 @@ void Ball::custom(Simulation *simulation, const Vector3 position, const Vector3 
     sphere_hitbox(simulation, &this->hitbox, mass, radius);
     this->set_position(position);
     this->set_rotation(rotation);
+}
+
+void Billboard::load() {
+    if (this->is_loaded()) {
+        return;
+    }
+    this->load_texture();
+    this->loaded = true;
+}
+
+void Billboard::unload() {
+    if (this->is_loaded()) {
+        return;
+    }
+    this->load_texture();
+    this->loaded = true;
+}
+
+void SharedTexture::share_texture(Texture *texture) {
+    this->shared_texture = texture;
+}
+
+void SharedTexture::load_texture() {
+
+}
+
+void SharedTexture::release_texture() {
+
+}
+
+Texture *SharedTexture::get_texture() {
+    return this->shared_texture;
 }

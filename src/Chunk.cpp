@@ -4,6 +4,7 @@
 
 #include <raylib.h>
 #include <chrono>
+#include <raymath.h>
 
 
 static int lightsCount = 0;
