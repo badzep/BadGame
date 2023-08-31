@@ -48,10 +48,12 @@ protected:
     Shader shader;
     float fog_density;
     bool done;
-    std::vector<GameObject*> game_objects;
-    std::vector<Texture*> loaded_textures;
-    std::vector<Sprite3d*> sprites;
-    virtual void render();
+
+    std::vector<BaseGameObject*> game_objects;
+//    std::vector<GameObject*> game_objects;
+//    std::vector<Texture*> loaded_textures;
+//    std::vector<Sprite3d*> sprites;
+    void render();
     virtual std::string id() = 0;
     virtual void load() = 0;
     virtual void unload() = 0;
