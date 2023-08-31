@@ -215,6 +215,14 @@ void Billboard::render() {
     DrawBillboard(*this->camera, *this->get_texture(), this->get_position(), this->size, this->color);
 }
 
+Vector3 Billboard::get_position() {
+    return this->position;
+}
+
+void Billboard::set_position(Vector3 _position) {
+    this->position = _position;
+}
+
 void SharedTexture::share_texture(Texture *texture) {
     this->shared_texture = texture;
 }

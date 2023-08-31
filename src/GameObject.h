@@ -111,6 +111,8 @@ public:
     void unload() override;
     void render() override;
     void set_camera(Camera* _camera);
+    Vector3 get_position() override;
+    void set_position(Vector3 _position) override;
 };
 
 class Model3d: public GameObject, public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation, public virtual Textured {

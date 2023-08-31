@@ -7,7 +7,7 @@ typedef struct {
     int target_fps;
     float fov;
     float sensitivity;
-    int show_fps;
+    unsigned short show_fps;
 } Config;
 
 
