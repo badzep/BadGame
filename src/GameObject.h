@@ -7,6 +7,7 @@
 
 #include <raylib.h>
 #include <string>
+#include <raymath.h>
 
 
 class GameObject {
@@ -202,6 +203,37 @@ public:
 class Ball: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink, public SharedTexture  {
 public:
     void custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const float radius, const float mass, Texture* external_texture);
+};
+
+class PhysicalCylinder: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink, public SharedTexture  {
+protected:
+    float length;
+public:
+    void custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const float radius, const float length, const float mass, Texture* external_texture);
+    void update_model_rotation() override {
+        const double* rotation = dBodyGetRotation(this->hitbox.body);
+        this->model.transform.m0 = (float) rotation[0];
+        this->model.transform.m1 = (float) rotation[4];
+        this->model.transform.m2 = (float) rotation[8];
+        this->model.transform.m3 = 0;
+        this->model.transform.m4 = (float) rotation[1];
+        this->model.transform.m5 = (float) rotation[5];
+        this->model.transform.m6 = (float) rotation[9];
+        this->model.transform.m7 = 0;
+        this->model.transform.m8 = (float) rotation[2];
+        this->model.transform.m9 = (float) rotation[6];
+        this->model.transform.m10 = (float) rotation[10];
+        this->model.transform.m11 = 0;
+        this->model.transform.m12 = 0;
+        this->model.transform.m13 = 0;
+        this->model.transform.m14 = 0;
+        this->model.transform.m15 = 1;
+
+        Matrix r = MatrixRotateX(DEG2RAD*90);
+        Matrix t = MatrixTranslate(0,this->length/2*-1,0);
+        this->model.transform =  MatrixMultiply(r,this->model.transform);
+        this->model.transform =  MatrixMultiply(t, this->model.transform);
+    }
 };
 
 #endif //BADGAME_GAMEOBJECT_H

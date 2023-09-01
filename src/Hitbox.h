@@ -19,4 +19,6 @@ void cuboid_hitbox(Simulation* simulation, Hitbox3d* hitbox, const double mass, 
 
 void sphere_hitbox(Simulation* simulation, Hitbox3d* hitbox, const double mass, const double radius);
 
+void cylinder_hitbox(Simulation* simulation, Hitbox3d* hitbox, const double mass, const double radius, const double length);
+
 #endif //BADGAME_HITBOX_H

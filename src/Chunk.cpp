@@ -284,7 +284,7 @@ void Debug0::tick(double frame_time) {
     }
 
     const float angle = Vector2Angle((Vector2) {0, 1},{this->camera.target.x, this->camera.target.z});
-    force = Vector2Rotate(force, angle);
+    force = Vector2Rotate(force, -angle + PI / 2);
     force = Vector2Normalize(force);
 
     this->player.apply_force({force.x * PLAYER_MOVEMENT_SPEED * movement_speed_multiplier, 0, force.y * PLAYER_MOVEMENT_SPEED * movement_speed_multiplier});

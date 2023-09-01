@@ -191,6 +191,12 @@ void Ball::custom(Simulation *simulation, const Vector3 position, const Vector3 
     this->set_rotation(rotation);
 }
 
+void PhysicalCylinder::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation, const float radius, const float length,
+                              const float mass, Texture *external_texture) {
+
+}
+
+
 void Billboard::load() {
     if (this->is_loaded()) {
         return;
