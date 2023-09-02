@@ -233,7 +233,7 @@ void Debug0::load() {
     this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(this->lighting_shader, "viewPos");
 
     int fogDensityLoc = GetShaderLocation(this->lighting_shader, "fog_density");
-    this->fog_density = 0.05f;
+    this->fog_density = 0.025f;
     SetShaderValue(this->lighting_shader, fogDensityLoc, &this->fog_density, SHADER_UNIFORM_FLOAT);
 
     this->player_light = CreateLight(LIGHT_POINT, (Vector3) {0, 5, 0}, ZERO_ZERO_ZERO, (Color) {10, 5, 0}, this->lighting_shader);
@@ -284,7 +284,8 @@ void Debug0::tick(double frame_time) {
     }
 
     const float angle = Vector2Angle((Vector2) {0, 1},{this->camera.target.x, this->camera.target.z});
-    force = Vector2Rotate(force, -angle + PI / 2);
+//    force = Vector2Rotate(force, -angle + PI / 2);
+    force = Vector2Rotate(force, angle);
     force = Vector2Normalize(force);
 
     this->player.apply_force({force.x * PLAYER_MOVEMENT_SPEED * movement_speed_multiplier, 0, force.y * PLAYER_MOVEMENT_SPEED * movement_speed_multiplier});
