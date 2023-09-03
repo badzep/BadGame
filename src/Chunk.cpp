@@ -116,7 +116,6 @@ void MainScreen::load() {
     DisableCursor();
 
     this->target = LoadRenderTexture(RENDER_WIDTH, RENDER_HEIGHT);
-    SetTextureFilter(this->target.texture, TEXTURE_FILTER_BILINEAR);
 
     this->camera = (Camera3D) {{0, 0, 0},
                                {9999, 1, 0},
@@ -189,7 +188,6 @@ void Debug0::load() {
     initialize_simulation(&this->simulation);
 
     this->target = LoadRenderTexture(RENDER_WIDTH, RENDER_HEIGHT);
-    SetTextureFilter(this->target.texture, TEXTURE_FILTER_BILINEAR);
 
     this->camera = (Camera3D) {Vector3{0, 1, 0},
                                Vector3{9999, 1, 0},
