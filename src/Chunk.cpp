@@ -139,10 +139,10 @@ void MainScreen::load() {
 
     MainScreenWall* main_screen_wall = new MainScreenWall();
     main_screen_wall->factory();
+    MainScreenText* main_screen_text = new MainScreenText();
+    main_screen_text->factory();
 
-    this->game_objects = (std::vector<GameObject*>) {main_screen_wall};
-
-    main_screen_wall->apply_shader(&this->lighting_shader);
+    this->game_objects = (std::vector<GameObject*>) {main_screen_wall, main_screen_text};
 
     for (GameObject* game_object: this->game_objects) {
         if (game_object->is_loaded()) {
@@ -150,6 +150,11 @@ void MainScreen::load() {
         }
         game_object->load();
     }
+
+    main_screen_wall->apply_shader(&this->lighting_shader);
+//    main_screen_text->apply_shader(&this->lighting_shader);
+
+
 
     UpdateLightValues(this->lighting_shader, this->light);
     float camera_position[3] = {camera.position.x, camera.position.y, camera.position.z};
@@ -206,6 +211,9 @@ void Debug0::load() {
     Ball* ball = new Ball();
     ball->custom(&this->simulation, Vector3{1, 1, 1}, Vector3{0, 0, 0}, .5, 100, &plasma);
 
+    MainScreenText* main_screen_text = new MainScreenText();
+    main_screen_text->factory();
+
     Structure* floor = new Structure();
     floor->custom(&this->simulation, Vector3{0, -2, 0}, Vector3{0, 0, 0}, {50, 2, 50}, &plasma);
 
@@ -222,7 +230,7 @@ void Debug0::load() {
     wall4->custom(&this->simulation, Vector3{0, 4, -24}, Vector3{0, 0, 0}, Vector3{ 50, 50, 1}, &brick);
 
 
-    this->game_objects = (std::vector<GameObject*>) {&player, &block, ball, floor, wall1, wall2, wall3, wall4};
+    this->game_objects = (std::vector<GameObject*>) {&player, &block,main_screen_text, ball, floor, wall1, wall2, wall3, wall4};
 
     this->shader = LoadShader(nullptr, "resources/color_limit.fs");
     this->lighting_shader = LoadShader("resources/lighting.vs",
@@ -236,6 +244,12 @@ void Debug0::load() {
 
     this->player_light = CreateLight(LIGHT_POINT, (Vector3) {0, 5, 0}, ZERO_ZERO_ZERO, (Color) {10, 5, 0}, this->lighting_shader);
 
+
+
+    for (GameObject* game_object: this->game_objects) {
+        game_object->load();
+    }
+
     this->block.apply_shader(&this->lighting_shader);
     ball->apply_shader(&this->lighting_shader);
     floor->apply_shader(&this->lighting_shader);
@@ -244,9 +258,6 @@ void Debug0::load() {
     wall3->apply_shader(&this->lighting_shader);
     wall4->apply_shader(&this->lighting_shader);
 
-    for (GameObject* game_object: this->game_objects) {
-        game_object->load();
-    }
 
     UpdateLightValues(this->lighting_shader, this->player_light);
     float camera_position[3] = {camera.position.x, camera.position.y, camera.position.z};

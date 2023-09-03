@@ -13,7 +13,7 @@ void Model3d::render() {
         return;
     }
     this->update_model_rotation();
-    DrawModel(this->model, this->get_position(), 1, WHITE);
+    DrawModel(this->model, this->get_position(), this->scale, WHITE);
 }
 
 void Model3d::load() {
@@ -34,6 +34,10 @@ void Model3d::unload() {
 
 void Model3d::apply_shader(Shader *shader) const {
     this->model.materials[0].shader = *shader;
+}
+
+void Model3d::set_scale(float _scale) {
+    this->scale = _scale;
 }
 
 Vector3 Ghost3d::get_position() {
@@ -157,13 +161,24 @@ void Player::factory(Simulation *simulation, Camera *camera) {
 }
 
 void Player::render() {
+
 }
 
 void MainScreenWall::factory() {
-    this->model = LoadModelFromMesh(GenMeshCube(1, 5, 5));
+    this->model = LoadModelFromMesh(GenMeshCube(1, 20, 20));
+
     this->set_position({5, 0, 0});
-    this->set_rotation({0, PI/5, 0});
+    this->set_scale(1);
+    this->set_rotation({0, PI/8, 0});
     this->texture_path = "resources/brick.png";
+}
+
+void MainScreenText::factory() {
+    this->model = LoadModel("resources/mainscreentext.obj");
+    this->set_position({3, 0, .3});
+    this->set_rotation({-PI/2, -PI/2 + PI/8, 0});
+    this->set_scale(1);
+    this->texture_path = "resources/red.png";
 }
 
 void Structure::custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, Texture* external_texture) {
@@ -191,11 +206,9 @@ void Ball::custom(Simulation *simulation, const Vector3 position, const Vector3 
     this->set_rotation(rotation);
 }
 
-void PhysicalCylinder::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation, const float radius, const float length,
-                              const float mass, Texture *external_texture) {
+void PhysicalCylinder::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation, const float radius, const float length, const float mass, Texture *external_texture) {
 
 }
-
 
 void Billboard::load() {
     if (this->is_loaded()) {

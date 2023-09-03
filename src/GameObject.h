@@ -120,13 +120,17 @@ class Model3d: public GameObject, public virtual ThreeDimensionalLinearity, publ
 protected:
     Model model;
     bool visible = true;
+    float scale = 1;
     virtual void update_model_rotation() = 0;
 public:
     void render() override;
     void load() override;
     void unload() override;
     void apply_shader(Shader* shader) const;
+    void set_scale(float _scale);
 };
+
+
 
 class Ghost3d: public virtual ThreeDimensionalLinearity, public virtual ThreeDimensionalRotation {
 protected:
@@ -186,6 +190,11 @@ public:
 };
 
 class MainScreenWall: virtual public Model3d, virtual public Ghost3d, public Ghost3dModelRotationLink, public IndependentTexture {
+public:
+    void factory();
+};
+
+class MainScreenText: virtual public Model3d, virtual public Ghost3d, public Ghost3dModelRotationLink, public IndependentTexture {
 public:
     void factory();
 };
