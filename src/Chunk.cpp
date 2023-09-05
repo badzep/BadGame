@@ -200,28 +200,29 @@ void Debug0::load() {
 
     this->player.factory(&this->simulation, &this->camera);
 
-    this->plasma = LoadTexture("resources/plasma.png");
     this->brick = LoadTexture("resources/brick.png");
+    this->cement = LoadTexture("resources/cement.png");
+    this->padded = LoadTexture("resources/padded_walls.png");
 
-    this->block.custom(&this->simulation, Vector3{0.0f, 5.0f, 0.0f}, Vector3{0, 0, 0}, Vector3{2, 2, 2}, 100, &plasma);
+    this->block.custom(&this->simulation, Vector3{0.0f, 5.0f, 0.0f}, Vector3{0, 0, 0}, Vector3{2, 2, 2}, 100, &brick);
 
     Ball* ball = new Ball();
-    ball->custom(&this->simulation, Vector3{1, 1, 1}, Vector3{0, 0, 0}, .5, 100, &plasma);
+    ball->custom(&this->simulation, Vector3{1, 1, 1}, Vector3{0, 0, 0}, .5, 100, &brick);
 
     Structure* floor = new Structure();
-    floor->custom(&this->simulation, Vector3{0, -2, 0}, Vector3{0, 0, 0}, {50, 2, 50}, &plasma);
+    floor->custom(&this->simulation, Vector3{0, -2, 0}, Vector3{0, 0, 0}, {50, 2, 50}, &cement);
 
     Structure* wall1 = new Structure();
-    wall1->custom(&this->simulation, Vector3{24, 4, 0}, Vector3{0, 0, 0}, Vector3{1, 50, 50}, &brick);
+    wall1->custom(&this->simulation, Vector3{24, 4, 0}, Vector3{0, 0, 0}, Vector3{1, 50, 50}, &padded);
 
     Structure* wall2 = new Structure();
-    wall2->custom(&this->simulation, Vector3{-24, 4, 0}, Vector3{0, 0, 0}, Vector3{1, 50, 50}, &brick);
+    wall2->custom(&this->simulation, Vector3{-24, 4, 0}, Vector3{0, 0, 0}, Vector3{1, 50, 50}, &padded);
 
     Structure* wall3 = new Structure();
-    wall3->custom(&this->simulation, Vector3{0, 4, 24}, Vector3{0, 0, 0}, Vector3{50, 50, 1}, &brick);
+    wall3->custom(&this->simulation, Vector3{0, 4, 24}, Vector3{0, 0, 0}, Vector3{50, 50, 1}, &padded);
 
     Structure* wall4 = new Structure();
-    wall4->custom(&this->simulation, Vector3{0, 4, -24}, Vector3{0, 0, 0}, Vector3{ 50, 50, 1}, &brick);
+    wall4->custom(&this->simulation, Vector3{0, 4, -24}, Vector3{0, 0, 0}, Vector3{ 50, 50, 1}, &padded);
 
 
     this->game_objects = (std::vector<GameObject*>) {&player, &block, ball, floor, wall1, wall2, wall3, wall4};
@@ -233,10 +234,16 @@ void Debug0::load() {
     this->lighting_shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(this->lighting_shader, "viewPos");
 
     int fogDensityLoc = GetShaderLocation(this->lighting_shader, "fog_density");
-    this->fog_density = 0.025f;
+    this->fog_density = 0.002f;
     SetShaderValue(this->lighting_shader, fogDensityLoc, &this->fog_density, SHADER_UNIFORM_FLOAT);
 
-    this->player_light = CreateLight(LIGHT_POINT, (Vector3) {0, 5, 0}, ZERO_ZERO_ZERO, (Color) {10, 5, 0}, this->lighting_shader);
+//    this->player_light = CreateLight(LIGHT_POINT, (Vector3) {0, 5, 0}, ZERO_ZERO_ZERO, (Color) {10, 10, 10}, this->lighting_shader);
+    this->player_light = CreateLight(LIGHT_POINT, (Vector3) {0, 5, 0}, ZERO_ZERO_ZERO, (Color) {2, 1, 0}, this->lighting_shader);
+
+    int ambientLoc = GetShaderLocation(this->lighting_shader, "ambient");
+    float ambient_light[4]{.06,.03,.0,1};
+
+    SetShaderValue(this->lighting_shader, ambientLoc, ambient_light, SHADER_UNIFORM_VEC4);
 
     for (GameObject* game_object: this->game_objects) {
         game_object->load();
@@ -261,8 +268,9 @@ void Debug0::unload() {
     UnloadShader(this->lighting_shader);
     UnloadShader(this->shader);
     UnloadRenderTexture(this->target);
-    UnloadTexture(this->plasma);
     UnloadTexture(this->brick);
+    UnloadTexture(this->padded);
+    UnloadTexture(this->cement);
 }
 
 void Debug0::tick(double frame_time) {
@@ -285,8 +293,8 @@ void Debug0::tick(double frame_time) {
     }
 
     const float angle = Vector2Angle((Vector2) {0, 1},{this->camera.target.x, this->camera.target.z});
-//    force = Vector2Rotate(force, -angle + PI / 2);
-    force = Vector2Rotate(force, angle);
+    force = Vector2Rotate(force, -angle + PI / 2);
+//    force = Vector2Rotate(force, angle);
     force = Vector2Normalize(force);
 
     this->player.apply_force({force.x * PLAYER_MOVEMENT_SPEED * movement_speed_multiplier, 0, force.y * PLAYER_MOVEMENT_SPEED * movement_speed_multiplier});

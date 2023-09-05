@@ -1,0 +1,1 @@
+Crazy? I was crazy once. They locked me in a rubber room with rats.

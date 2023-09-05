@@ -75,7 +75,8 @@ protected:
     Light player_light;
     Player player;
     Block block;
-    Texture plasma;
     Texture brick;
+    Texture padded;
+    Texture cement;
     std::string id() override;
 };
