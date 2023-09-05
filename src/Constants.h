@@ -12,10 +12,10 @@
 #define MAX(a, b) ((a)>(b)? (a) : (b))
 
 
-//const static int RENDER_WIDTH = 1280;
-//const static int RENDER_HEIGHT = 720;
-const static int RENDER_WIDTH = 256;
-const static int RENDER_HEIGHT = 144;
+const static int RENDER_WIDTH = 1280;
+const static int RENDER_HEIGHT = 720;
+//const static int RENDER_WIDTH = 256;
+//const static int RENDER_HEIGHT = 144;
 
 const static float GAME_WIDTH = 16;
 const static float GAME_HEIGHT = 9;

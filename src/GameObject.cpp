@@ -181,6 +181,14 @@ void MainScreenText::factory() {
     this->texture_path = "resources/red.png";
 }
 
+void Rat::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation) {
+    this->model = LoadModel("resources/rat.glb");
+    this->texture_path = "resources/red.png";
+    cuboid_hitbox(simulation, &this->hitbox, 10, .2, .5, .2);
+    this->set_position(position);
+    this->set_rotation(Vector3Add(rotation,{-PI/2, -PI, PI/2}));
+}
+
 void Structure::custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, Texture* external_texture) {
     this->model = LoadModelFromMesh(GenMeshCube(size.x, size.y, size.z));
     this->share_texture(external_texture);

@@ -204,10 +204,14 @@ void Debug0::load() {
     this->cement = LoadTexture("resources/cement.png");
     this->padded = LoadTexture("resources/padded_walls.png");
 
-    this->block.custom(&this->simulation, Vector3{0.0f, 5.0f, 0.0f}, Vector3{0, 0, 0}, Vector3{2, 2, 2}, 100, &brick);
+//    this->block.custom(&this->simulation, Vector3{0.0f, 5.0f, 0.0f}, Vector3{0, 0, 0}, Vector3{2, 2, 2}, 100, &brick);
+    this->block.custom(&this->simulation, Vector3{0.0f, 3.0f, 5.0f}, Vector3{0, 0, 0}, Vector3{1, 2, 2}, 100, &brick);
 
     Ball* ball = new Ball();
     ball->custom(&this->simulation, Vector3{1, 1, 1}, Vector3{0, 0, 0}, .5, 100, &brick);
+
+    Rat* rat = new Rat();
+    rat->custom(&this->simulation, Vector3{2, 5, 0}, Vector3{0, 0, 0});
 
     Structure* floor = new Structure();
     floor->custom(&this->simulation, Vector3{0, -2, 0}, Vector3{0, 0, 0}, {50, 2, 50}, &cement);
@@ -225,7 +229,7 @@ void Debug0::load() {
     wall4->custom(&this->simulation, Vector3{0, 4, -24}, Vector3{0, 0, 0}, Vector3{ 50, 50, 1}, &padded);
 
 
-    this->game_objects = (std::vector<GameObject*>) {&player, &block, ball, floor, wall1, wall2, wall3, wall4};
+    this->game_objects = (std::vector<GameObject*>) {&player, &block, ball, floor, wall1, wall2, wall3, wall4, rat};
 
     this->shader = LoadShader(nullptr, "resources/color_limit.fs");
     this->lighting_shader = LoadShader("resources/lighting.vs",

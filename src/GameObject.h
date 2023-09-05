@@ -198,6 +198,11 @@ public:
     void factory();
 };
 
+class Rat: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink, public IndependentTexture {
+public:
+    void custom(Simulation* simulation, const Vector3 position, const Vector3 rotation);
+};
+
 class Structure: virtual public Model3d, public virtual Tangible3d, public TangibleModelRotationLink, public SharedTexture {
 public:
     void custom(Simulation* simulation, const Vector3 position, const Vector3 rotation, const Vector3 size, Texture* external_texture);
