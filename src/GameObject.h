@@ -1,5 +1,4 @@
-#ifndef BADGAME_GAMEOBJECT_H
-#define BADGAME_GAMEOBJECT_H
+#pragma once
 
 
 #include "Hitbox.h"
@@ -244,5 +243,3 @@ public:
         this->model.transform =  MatrixMultiply(t, this->model.transform);
     }
 };
-
-#endif //BADGAME_GAMEOBJECT_H
