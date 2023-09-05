@@ -1,5 +1,4 @@
-#ifndef BADGAME_CHUNK_H
-#define BADGAME_CHUNK_H
+#pragma once
 
 
 #include "Constants.h"
@@ -80,6 +79,3 @@ protected:
     Texture brick;
     std::string id() override;
 };
-
-#endif //BADGAME_CHUNK_H
-

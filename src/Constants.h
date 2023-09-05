@@ -1,5 +1,4 @@
-#ifndef BADGAME_CONSTANTS_H
-#define BADGAME_CONSTANTS_H
+#pragma once
 
 
 #include "Config.h"
@@ -28,5 +27,3 @@ const static  Vector2 ZERO_ZERO{0, 0};
 const static Vector3 ZERO_ZERO_ZERO{0, 0, 0};
 
 const float PLAYER_MOVEMENT_SPEED = 1250;
-
-#endif //BADGAME_CONSTANTS_H

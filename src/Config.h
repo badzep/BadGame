@@ -1,5 +1,4 @@
-#ifndef BADGAME_CONFIG_H
-#define BADGAME_CONFIG_H
+#pragma once
 
 
 typedef struct {
@@ -12,5 +11,3 @@ typedef struct {
 
 
 void default_config(Config* config);
-
-#endif //BADGAME_CONFIG_H
