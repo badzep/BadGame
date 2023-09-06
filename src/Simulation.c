@@ -27,7 +27,7 @@ void nearCallback (void *data, dGeomID geometry1, dGeomID geometry2) {
             contact[i].surface.slip2 = 0.01;
             contact[i].surface.mu = dInfinity;
             contact[i].surface.mu2 = dInfinity;
-            contact[i].surface.soft_erp = 0.4; // [0.1, 0.8] recommended
+            contact[i].surface.soft_erp = 0.4;
             contact[i].surface.soft_cfm = 0.0004;
             dJointID joint = dJointCreateContact (simulation->world, simulation->contacts, &contact[i]);
             dJointAttach (joint, dGeomGetBody(contact[i].geom.g1), dGeomGetBody(contact[i].geom.g2));

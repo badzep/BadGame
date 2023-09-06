@@ -4,6 +4,7 @@
 #include <raylib.h>
 #include <raymath.h>
 
+
 bool GameObject::is_loaded() const {
     return this->loaded;
 }
@@ -154,7 +155,6 @@ void Player::factory(Simulation *simulation, Camera *camera) {
     this->set_position({0, 0, 0});
     this->set_rotation({0, 0, 0});
     this->set_angular_dampening(1);
-
     this->set_camera(camera);
     this->set_camera_linear_offset({0, 0.5, 0});
     this->update_camera();
@@ -166,7 +166,6 @@ void Player::render() {
 
 void MainScreenWall::factory() {
     this->model = LoadModelFromMesh(GenMeshCube(1, 20, 20));
-
     this->set_position({5, 0, 0});
     this->set_scale(1);
     this->set_rotation({0, PI/8, 0});
@@ -184,7 +183,7 @@ void MainScreenText::factory() {
 void Rat::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation) {
     this->model = LoadModel("resources/rat.glb");
     this->texture_path = "resources/red.png";
-    cuboid_hitbox(simulation, &this->hitbox, 10, .2, .5, .2);
+    cuboid_hitbox(simulation, &this->hitbox, 10, .3, .6, .2);
     this->set_position(position);
     this->set_rotation(Vector3Add(rotation,{-PI/2, -PI, PI/2}));
 }
@@ -215,7 +214,7 @@ void Ball::custom(Simulation *simulation, const Vector3 position, const Vector3 
 }
 
 void PhysicalCylinder::custom(Simulation *simulation, const Vector3 position, const Vector3 rotation, const float radius, const float length, const float mass, Texture *external_texture) {
-
+    // TODO
 }
 
 void Billboard::load() {

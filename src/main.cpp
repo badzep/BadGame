@@ -1,6 +1,5 @@
 #include "Constants.h"
 #include "Chunk.h"
-#include "Simulation.h"
 #include "Config.h"
 
 
@@ -10,9 +9,6 @@
 int main() {
     Config config;
     default_config(&config);
-
-    Simulation simulation;
-    initialize_simulation(&simulation);
 
     if (config.target_fps > 0) {
         SetTargetFPS(config.target_fps);
