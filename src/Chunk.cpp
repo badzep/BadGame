@@ -214,7 +214,7 @@ void Debug0::load() {
     rat->custom(&this->simulation, Vector3{2, 5, 0}, Vector3{0, 0, 0});
 
     Structure* floor = new Structure();
-    floor->custom(&this->simulation, Vector3{0, -2, 0}, Vector3{0, 0, 0}, {50, 2, 50}, &cement);
+    floor->custom(&this->simulation, Vector3{0, -2, 0}, Vector3{0, 0, 0}, {50, 2, 50}, &brick);
 
     Structure* wall1 = new Structure();
     wall1->custom(&this->simulation, Vector3{24, 4, 0}, Vector3{0, 0, 0}, Vector3{1, 50, 50}, &padded);
